@@ -1,0 +1,386 @@
+-- 1. CREATE DATABASE
+
+CREATE DATABASE IF NOT EXISTS CrownfieldEyeHospital;
+
+USE CrownfieldEyeHospital;
+
+
+-- 2. CREATE TABLES
+
+-- PATIENT TABLE
+
+CREATE TABLE Patient (
+    PatientID INT AUTO_INCREMENT PRIMARY KEY,
+    PatientName VARCHAR(100) NOT NULL,
+    Address VARCHAR(255)
+);
+
+-- CLINIC TABLE
+
+CREATE TABLE Clinic (
+    ClinicID INT AUTO_INCREMENT PRIMARY KEY,
+    ClinicName VARCHAR(100) NOT NULL,
+    ClinicAddress VARCHAR(255)
+);
+
+-- DOCTOR TABLE
+
+CREATE TABLE Doctor (
+    DoctorID INT AUTO_INCREMENT PRIMARY KEY,
+    DoctorName VARCHAR(100) NOT NULL,
+    DoctorSpeciality VARCHAR(100),
+    ClinicID INT NOT NULL,
+    FOREIGN KEY (ClinicID)
+        REFERENCES Clinic(ClinicID)
+);
+
+-- APPOINTMENT TABLE
+
+CREATE TABLE Appointment (
+    AppointmentID INT AUTO_INCREMENT PRIMARY KEY,
+    PatientID INT NOT NULL,
+    DoctorID INT NOT NULL,
+    AppointmentDate DATE NOT NULL,
+    AppointmentTime TIME NOT NULL,
+    Reason VARCHAR(255),
+    FOREIGN KEY (PatientID)
+        REFERENCES Patient(PatientID),
+    FOREIGN KEY (DoctorID)
+        REFERENCES Doctor(DoctorID)
+);
+
+-- MEDICATION TABLE
+
+CREATE TABLE Medication (
+    MedicationID INT AUTO_INCREMENT PRIMARY KEY,
+    MedicationName VARCHAR(100) NOT NULL
+);
+
+-- PRESCRIPTION TABLE
+
+CREATE TABLE Prescription (
+    PrescriptionID INT AUTO_INCREMENT PRIMARY KEY,
+    AppointmentID INT NOT NULL,
+    PatientID INT NOT NULL,
+    DoctorID INT NOT NULL,
+    MedicationID INT NOT NULL,
+    Dose VARCHAR(100),
+    FOREIGN KEY (AppointmentID)
+        REFERENCES Appointment(AppointmentID)
+        ON DELETE CASCADE,
+    FOREIGN KEY (PatientID)
+        REFERENCES Patient(PatientID),
+    FOREIGN KEY (DoctorID)
+        REFERENCES Doctor(DoctorID),
+    FOREIGN KEY (MedicationID)
+        REFERENCES Medication(MedicationID)
+);
+
+
+-- 3. INSERT SAMPLE PATIENT DATA
+
+INSERT INTO Patient (PatientName, Address) VALUES
+('John Smith', '123 Hill Road'),
+('Mary Jones', '456 Lake Avenue'),
+('Charlotte Graham', '22 Acacia Avenue'),
+('John Wick', '112 Lower Horseshoe Road'),
+('Keanu Reeves', '131 Lakeview Road'),
+('Thomas Anderson', '101 Room'),
+('Emily Carter', '78 Oak Street'),
+('Daniel Wilson', '15 Birch Close'),
+('Olivia Brown', '44 Meadow Lane'),
+('James Taylor', '91 Church Road');
+
+
+-- 4. INSERT CLINIC DATA
+
+INSERT INTO Clinic (ClinicName, ClinicAddress) VALUES
+('Clinic A', 'London'),
+('Clinic B', 'Wembley'),
+('Clinic C', 'Manchester');
+
+
+-- 5. INSERT DOCTOR DATA
+
+INSERT INTO Doctor
+(DoctorName, DoctorSpeciality, ClinicID)
+VALUES
+('Dr Smith', 'Ophthalmology', 1),
+('Dr Jones', 'Retina', 2),
+('Dr Brown', 'Glaucoma', 1),
+('Dr Wilson', 'Cataract', 3);
+
+
+-- 6. INSERT APPOINTMENT DATA
+
+INSERT INTO Appointment
+(PatientID, DoctorID, AppointmentDate,
+AppointmentTime, Reason)
+VALUES
+(1, 1, '2026-06-10', '10:00:00', 'Eye examination'),
+(2, 2, '2026-06-11', '11:00:00', 'Retina check'),
+(3, 3, '2026-06-12', '09:30:00', 'Glaucoma examination'),
+(4, 1, '2026-06-13', '12:00:00', 'Cataract check'),
+(5, 4, '2026-06-14', '14:00:00', 'Eye examination');
+
+
+-- 7. INSERT MEDICATION DATA
+
+INSERT INTO Medication (MedicationName) VALUES
+('Eye Drops'),
+('Tablets'),
+('Antibiotic Eye Drops'),
+('Artificial Tears'),
+('Glaucoma Medication');
+
+
+-- 8. INSERT PRESCRIPTION DATA
+
+INSERT INTO Prescription
+(AppointmentID, PatientID, DoctorID, MedicationID, Dose)
+VALUES
+(1, 1, 1, 1, '2 drops daily'),
+(2, 2, 2, 2, 'One tablet daily'),
+(3, 3, 3, 5, '1 drop twice daily'),
+(4, 4, 1, 3, '2 drops daily'),
+(5, 5, 4, 4, 'As required');
+
+
+-- 9. DATA RETRIEVAL (SELECT)
+
+SELECT * FROM Patient;
+
+SELECT * FROM Clinic;
+
+SELECT * FROM Doctor;
+
+SELECT * FROM Appointment;
+
+SELECT * FROM Medication;
+
+SELECT * FROM Prescription;
+
+
+-- 10. INNER JOIN QUERY
+
+SELECT
+    a.AppointmentID,
+    p.PatientName,
+    d.DoctorName,
+    a.AppointmentDate,
+    a.AppointmentTime,
+    a.Reason
+FROM Appointment a
+INNER JOIN Patient p
+    ON a.PatientID = p.PatientID
+INNER JOIN Doctor d
+    ON a.DoctorID = d.DoctorID;
+
+
+-- 11. LEFT JOIN QUERY
+
+SELECT
+    d.DoctorName,
+    a.AppointmentID,
+    a.AppointmentDate,
+    a.AppointmentTime
+FROM Doctor d
+LEFT JOIN Appointment a
+    ON d.DoctorID = a.DoctorID;
+
+
+-- 12. GROUP BY QUERY
+
+SELECT
+    d.DoctorName,
+    COUNT(a.AppointmentID) AS TotalAppointments
+FROM Doctor d
+LEFT JOIN Appointment a
+    ON d.DoctorID = a.DoctorID
+GROUP BY d.DoctorID, d.DoctorName;
+
+
+-- 13. PRESCRIPTION QUERY
+
+SELECT
+    p.PatientName,
+    d.DoctorName,
+    m.MedicationName,
+    pr.Dose
+FROM Prescription pr
+INNER JOIN Patient p
+    ON pr.PatientID = p.PatientID
+INNER JOIN Doctor d
+    ON pr.DoctorID = d.DoctorID
+INNER JOIN Medication m
+    ON pr.MedicationID = m.MedicationID;
+
+
+-- 14. UPDATE QUERY
+
+UPDATE Patient
+SET Address = '25 New London Road'
+WHERE PatientID = 1;
+
+SELECT * FROM Patient
+WHERE PatientID = 1;
+
+
+-- 15. DELETE QUERY
+-- This also deletes the linked prescription
+-- because ON DELETE CASCADE is enabled.
+
+DELETE FROM Appointment
+WHERE AppointmentID = 5;
+
+
+-- 16. CREATE DATABASE ROLES
+
+CREATE ROLE IF NOT EXISTS 'admin';
+
+CREATE ROLE IF NOT EXISTS 'doctor';
+
+CREATE ROLE IF NOT EXISTS 'receptionist';
+
+CREATE ROLE IF NOT EXISTS 'patient';
+
+
+-- 17. ADMINISTRATOR PRIVILEGES
+
+GRANT ALL PRIVILEGES
+ON CrownfieldEyeHospital.*
+TO 'admin';
+
+
+-- 18. DOCTOR PRIVILEGES
+
+GRANT SELECT, INSERT, UPDATE
+ON CrownfieldEyeHospital.Patient
+TO 'doctor';
+
+GRANT SELECT, INSERT, UPDATE
+ON CrownfieldEyeHospital.Appointment
+TO 'doctor';
+
+GRANT SELECT, INSERT, UPDATE
+ON CrownfieldEyeHospital.Prescription
+TO 'doctor';
+
+GRANT SELECT
+ON CrownfieldEyeHospital.Doctor
+TO 'doctor';
+
+GRANT SELECT
+ON CrownfieldEyeHospital.Clinic
+TO 'doctor';
+
+GRANT SELECT
+ON CrownfieldEyeHospital.Medication
+TO 'doctor';
+
+
+-- 19. RECEPTIONIST PRIVILEGES
+
+GRANT SELECT
+ON CrownfieldEyeHospital.Patient
+TO 'receptionist';
+
+GRANT SELECT
+ON CrownfieldEyeHospital.Doctor
+TO 'receptionist';
+
+GRANT SELECT, INSERT
+ON CrownfieldEyeHospital.Appointment
+TO 'receptionist';
+
+
+-- 20. PATIENT PRIVILEGES
+
+GRANT SELECT
+ON CrownfieldEyeHospital.Appointment
+TO 'patient';
+
+GRANT SELECT
+ON CrownfieldEyeHospital.Prescription
+TO 'patient';
+
+GRANT SELECT
+ON CrownfieldEyeHospital.Medication
+TO 'patient';
+
+
+-- 21. CREATE DATABASE USERS
+
+CREATE USER IF NOT EXISTS 'admin_user'@'localhost'
+IDENTIFIED BY 'Admin123!';
+
+CREATE USER IF NOT EXISTS 'doctor_user'@'localhost'
+IDENTIFIED BY 'Doctor123!';
+
+CREATE USER IF NOT EXISTS 'receptionist_user'@'localhost'
+IDENTIFIED BY 'Reception123!';
+
+CREATE USER IF NOT EXISTS 'patient_user'@'localhost'
+IDENTIFIED BY 'Patient123!';
+
+
+-- 22. ASSIGN ROLES TO USERS
+
+GRANT 'admin'
+TO 'admin_user'@'localhost';
+
+GRANT 'doctor'
+TO 'doctor_user'@'localhost';
+
+GRANT 'receptionist'
+TO 'receptionist_user'@'localhost';
+
+GRANT 'patient'
+TO 'patient_user'@'localhost';
+
+
+-- 23. SET DEFAULT ROLES
+
+SET DEFAULT ROLE 'admin'
+TO 'admin_user'@'localhost';
+
+SET DEFAULT ROLE 'doctor'
+TO 'doctor_user'@'localhost';
+
+SET DEFAULT ROLE 'receptionist'
+TO 'receptionist_user'@'localhost';
+
+SET DEFAULT ROLE 'patient'
+TO 'patient_user'@'localhost';
+
+
+-- 24. CHECK DATABASE PERMISSIONS
+
+SHOW GRANTS FOR 'admin';
+
+SHOW GRANTS FOR 'doctor';
+
+SHOW GRANTS FOR 'receptionist';
+
+SHOW GRANTS FOR 'patient';
+
+
+-- 25. REVOKE EXAMPLE
+
+REVOKE INSERT
+ON CrownfieldEyeHospital.Appointment
+FROM 'receptionist';
+
+
+-- 26. CHECK DATABASE TABLES
+
+SHOW TABLES;
+
+
+-- 27. CHECK TABLE STRUCTURES
+
+DESCRIBE Patient;
+
+DESCRIBE Clinic;
+
+DESCRIBE Doctor;
